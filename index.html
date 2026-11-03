@@ -224,6 +224,14 @@ details summary{cursor:pointer;color:var(--g);font-size:12.5px;margin-top:10px;f
 .ep.hit{opacity:.55}
 #p-conn{padding:4px 8px}@media(max-width:560px){#clock{display:none}#p-conn .ct{display:none}}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}.ticker .track{animation:none}}
+
+#modebar{display:flex;gap:6px;padding:8px 16px 4px;background:#000}
+#modebar button{flex:1;background:var(--card2);color:var(--dim);border:1px solid var(--line);border-radius:14px;padding:10px 10px;font-weight:800;font-size:13.5px;cursor:pointer;letter-spacing:.02em;transition:all .2s}
+#modebar button.on{background:#fff;color:#000;border-color:#fff}
+body[data-mode="sniper"] #modebar button.on{background:var(--g);border-color:var(--g)}
+body[data-mode="sniper"] .tonly,body[data-mode="trading"] .sonly{display:none!important}
+.tag.cy2{background:var(--pud);color:var(--pu)}
+.sdw summary{cursor:pointer;color:var(--dim);font-size:12px;margin-top:8px}.sdw .ck{font-size:12px;line-height:1.65;margin-top:6px}.sdw .ck b.ok{color:var(--g)}.sdw .ck b.no{color:var(--r)}
 </style>
 </head>
 <body data-tab="home">
@@ -260,7 +268,7 @@ details summary{cursor:pointer;color:var(--g);font-size:12.5px;margin-top:10px;f
 
 <div id="app" style="display:none">
 <div id="top">
-  <span class="logo">GROK <i>TRADER</i></span>
+  <span class="logo" id="logo">GROK <i>TRADER</i></span>
   <span class="pill paper" id="p-paper">PAPER</span>
   <span class="pill" id="p-engine"><span class="dot mid"></span>…</span>
   <span class="spacer"></span>
@@ -270,6 +278,7 @@ details summary{cursor:pointer;color:var(--g);font-size:12.5px;margin-top:10px;f
   <button class="iconbtn" id="b-out" title="Logga ut" aria-label="Logga ut">⎋</button>
 </div>
 <div class="ticker"><div class="track" id="ticker"></div></div>
+<div id="modebar" role="tablist"><button data-mode="trading" class="on" role="tab">Trading Bot</button><button data-mode="sniper" role="tab">Sniper Bot</button></div>
 <div id="toasts"></div>
 <canvas id="confetti"></canvas>
 <main>
@@ -292,8 +301,10 @@ details summary{cursor:pointer;color:var(--g);font-size:12.5px;margin-top:10px;f
     <div class="tiles" id="stats" style="margin-top:0"></div>
     <div class="sh"><h2>Öppna positioner</h2><span class="cnt" id="pos-cnt"></span><button class="more" data-go="pos">Visa alla</button></div>
     <div class="list" id="home-pos"></div>
-    <div class="sh"><h2>Agenter live</h2><button class="more" data-go="agents">Alla</button></div>
-    <div class="mini" id="mini-agents"></div>
+    <div class="tonly"><div class="sh"><h2>Agenter live</h2><button class="more" data-go="agents">Alla</button></div>
+    <div class="mini" id="mini-agents"></div></div>
+    <div class="sonly"><div class="sh"><h2>Strategier</h2><button class="more" data-go="agents">Copy-trading</button></div>
+    <div class="tiles" id="sn-strat" style="margin-top:0"></div></div>
     <div class="sh"><h2>Senaste aktivitet</h2><button class="more" data-go="feed">Visa allt</button></div>
     <div id="home-feed"></div>
   </section>
@@ -314,6 +325,7 @@ details summary{cursor:pointer;color:var(--g);font-size:12.5px;margin-top:10px;f
 
   <!-- ===== AGENTER ===== -->
   <section class="pg" data-pg="agents">
+  <div class="tonly">
     <div class="sh" style="margin-top:12px"><h2>Agenter</h2><span class="cnt" id="ag-live"></span></div>
     <div class="agrid" id="agents"></div>
     <div class="sh"><h2>Senaste beslut</h2><span class="cnt">poäng per agent</span></div>
@@ -322,11 +334,23 @@ details summary{cursor:pointer;color:var(--g);font-size:12.5px;margin-top:10px;f
     <div class="list" id="debates"></div>
     <div class="sh"><h2>Säkerhetsveton</h2><span class="cnt" id="veto-cnt"></span></div>
     <div class="list" id="vetoes"></div>
+  </div>
+  <div class="sonly" id="sn-page">
+    <div class="sh" style="margin-top:12px"><h2>Copy-trading</h2><span class="cnt" id="sn-copy-st">paper</span></div>
+    <div class="tiles" id="sn-copy-kpi" style="margin-top:0"></div>
+    <div class="sh"><h2>Följda wallets</h2><span class="cnt" id="sn-w-cnt"></span></div>
+    <div class="list" id="sn-wallets"></div>
+    <div class="sh"><h2>Kopierade affärer</h2><span class="cnt" id="sn-ct-cnt"></span></div>
+    <div class="list" id="sn-ctrades"></div>
+    <div class="sh"><h2>Beslut &amp; skips</h2><span class="cnt">säkerhetskontroller per mynt</span></div>
+    <div class="seg" id="seg-sd"><button data-sd="all" class="on">Alla</button><button data-sd="BUY">Köp</button><button data-sd="SKIP">Skip &amp; veto</button></div>
+    <div class="list" id="sn-decs"></div>
+  </div>
   </section>
 
   <!-- ===== MER ===== -->
   <section class="pg" data-pg="more">
-    <div class="seg" id="seg-more"><button data-s="risk" class="on">Risk &amp; utgångar</button><button data-s="scan">Scanner</button><button data-s="smart">Smart money</button><button data-s="hype">Hypekällor</button><button data-s="tg">Telegram</button><button data-s="alerts">Larm</button><button data-s="src">Datakällor</button><button data-s="sys">System</button></div>
+    <div class="seg" id="seg-more"><button data-s="risk" class="on">Risk &amp; utgångar</button><button data-s="scan">Scanner</button><button data-s="smart" class="tonly">Smart money</button><button data-s="hype" class="tonly">Hypekällor</button><button data-s="tg" class="tonly">Telegram</button><button data-s="alerts">Larm</button><button data-s="src" class="tonly">Datakällor</button><button data-s="sys">System</button></div>
     <div class="mpane" data-m="risk">
       <div class="sh" style="margin-top:6px"><h2>Portföljrisk</h2></div>
       <div class="tiles" id="risk-kpi" style="margin-top:0"></div>
@@ -373,7 +397,7 @@ details summary{cursor:pointer;color:var(--g);font-size:12.5px;margin-top:10px;f
   <button data-t="home" class="on"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg>Översikt</button>
   <button data-t="pos"><svg viewBox="0 0 24 24"><path d="M3 17 9 11l4 4 8-9"/><path d="M15 6h6v6"/></svg>Positioner<span class="bd" id="bd-pos"></span></button>
   <button data-t="feed"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Aktivitet</button>
-  <button data-t="agents"><svg viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="11" rx="3"/><path d="M12 7V4"/><circle cx="9.5" cy="12.5" r=".8"/><circle cx="14.5" cy="12.5" r=".8"/><path d="M3 12v2M21 12v2"/></svg>Agenter</button>
+  <button data-t="agents"><svg viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="11" rx="3"/><path d="M12 7V4"/><circle cx="9.5" cy="12.5" r=".8"/><circle cx="14.5" cy="12.5" r=".8"/><path d="M3 12v2M21 12v2"/></svg><span id="tl-agents">Agenter</span></button>
   <button data-t="more"><svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/></svg>Mer</button>
 </nav>
 
@@ -456,6 +480,14 @@ const TABLES = {
   kv: {key: 'key', q: q => q},
   mirror: {key: r => r.src + '|' + r.pk, q: q => q.order('ts', {ascending: false, nullsFirst: false}).limit(1500)},
 };
+/* ===== Sniper Bot tab: same views, own tables (sniper_*), plus copy-trading tables. Trading Bot mode = exactly the original behaviour. ===== */
+TABLES.copy_wallets = {key: 'wallet', sonly: true, q: q => q.order('score', {ascending: false}).limit(80)};
+TABLES.copy_trades = {key: 'id', sonly: true, q: q => q.order('id', {ascending: false}).limit(300)};
+const SNIPER_T = new Set(['events', 'decisions', 'trades', 'route_comparisons', 'positions', 'equity_snapshots', 'alerts', 'kv', 'copy_wallets', 'copy_trades']);
+let MODE = localStorage.getItem('gt_mode') === 'sniper' ? 'sniper' : 'trading', MGEN = 0;
+document.body.dataset.mode = MODE;
+const dbT = t => MODE === 'sniper' ? 'sniper_' + t : t;
+const activeT = t => MODE === 'sniper' ? SNIPER_T.has(t) : !TABLES[t].sonly;
 /* optional tables another worker may add (no realtime subscription - a missing table must never break the channel; polled instead) */
 const OPT = {smart_wallets: {q: q => q.limit(200)}};
 const KEYOF = (t, r) => typeof TABLES[t].key === 'function' ? TABLES[t].key(r) : r[TABLES[t].key];
@@ -466,11 +498,14 @@ const dirty = new Set(); let raf = 0;
 const mark = (...k) => { k.forEach(x => dirty.add(x)); if (!raf) raf = requestAnimationFrame(() => { raf = 0; const d = [...dirty]; dirty.clear(); render(d); }); };
 
 async function loadAll() {
-  const res = await Promise.all(Object.entries(TABLES).map(async ([t, c]) => { const {data, error} = await c.q(sb.from(t).select('*')); if (error) throw new Error(t + ': ' + error.message); return [t, data || []]; }));
+  const gen = MGEN;
+  const res = await Promise.all(Object.entries(TABLES).map(async ([t, c]) => { if (!activeT(t)) return [t, []]; const {data, error} = await c.q(sb.from(dbT(t)).select('*')); if (error) throw new Error(t + ': ' + error.message); return [t, data || []]; }));
+  if (gen !== MGEN) return;
   res.forEach(([t, rows]) => { const m = new Map(); rows.forEach(r => m.set(KEYOF(t, r), r)); S[t] = m; });
   ready = true; mark('all'); loadOptional();
 }
 async function loadOptional() {
+  if (MODE === 'sniper') return;
   for (const [t, c] of Object.entries(OPT)) {
     try { const {data, error} = await c.q(sb.from(t).select('*')); if (error) { SOok[t] = false; continue; } SO[t] = data || []; SOok[t] = true; mark('opt'); } catch (e) { SOok[t] = false; }
   }
@@ -494,13 +529,32 @@ const flashPos = {};
 function subscribe() {
   if (channel) sb.removeChannel(channel);
   channel = sb.channel('gt-live-' + Math.random().toString(36).slice(2, 7));
-  Object.keys(TABLES).forEach(t => channel.on('postgres_changes', {event: '*', schema: 'public', table: t}, p => onChange(t, p)));
+  const g = MGEN;
+  Object.keys(TABLES).filter(activeT).forEach(t => channel.on('postgres_changes', {event: '*', schema: 'public', table: dbT(t)}, p => { if (g === MGEN) onChange(t, p); }));
   channel.subscribe(async (status) => {
+    if (g !== MGEN) return;
     live = status === 'SUBSCRIBED'; setConn();
     if (live) { try { await loadAll(); } catch (e) { console.warn(e); } }
   });
 }
 setInterval(async () => { if (!live && session) { try { await loadAll(); } catch (e) {} } }, 15000);
+
+function applyModeUI() {
+  document.body.dataset.mode = MODE;
+  $$('#modebar button').forEach(b => b.classList.toggle('on', b.dataset.mode === MODE));
+  $('#logo').innerHTML = MODE === 'sniper' ? 'GROK <i>SNIPER</i>' : 'GROK <i>TRADER</i>';
+  $('#tl-agents').textContent = MODE === 'sniper' ? 'Copy' : 'Agenter';
+  if (MODE !== 'sniper') document.title = 'GROK TRADER'; else document.title = 'GROK SNIPER';
+  if (MODE === 'sniper' && ['smart', 'hype', 'tg', 'src'].includes(moreSeg)) setMore('risk');
+}
+function switchMode(m) {
+  if (m === MODE) return;
+  MODE = m; MGEN++; localStorage.setItem('gt_mode', m);
+  ready = false; live = false; setConn();
+  Object.keys(TABLES).forEach(t => { S[t] = new Map(); });
+  feedSeen.clear(); lastEq = null; try { closeCoin(); } catch (e) {}
+  applyModeUI(); subscribe();
+}
 
 /* ---------------- Auth ---------------- */
 const lmsg = (t, ok) => { const m = $('#l-msg'); m.textContent = t; m.style.color = ok ? 'var(--g)' : 'var(--r)'; };
@@ -566,7 +620,7 @@ const sCls = v => v == null || isNaN(v) ? 'na' : v >= 75 ? 'hi' : v >= 50 ? 'mid
 const sbadge = (v, lg = '') => `<span class="sb ${sCls(v)} ${lg}">${v == null || isNaN(v) ? '–' : nf(v, 0)}</span>`;
 const pcpill = (n, txt) => `<span class="pc ${cls(n)}">${txt}</span>`;
 const EXIT_LBL = {tp: 'Take-profit', tp1: 'TP1', tp2: 'TP2', tp3: 'TP3', liquidity_drop: 'Likviditet föll', stop: 'Stop-loss', hard_stop: 'Hård stop', breakeven_stop: 'Breakeven-stop', trail: 'Trailing stop', runner_stall: 'Runner stannade',
-  stall: 'Stillastående', stale: 'Gammal förlorare', timeout: 'Tidsgräns', liq_drop: 'Likviditet föll', dev_sell: 'Dev sålde', security: 'Säkerhetsändring', manual: 'Manuell', kill: 'Kill-switch'};
+  stall: 'Stillastående', stale: 'Gammal förlorare', timeout: 'Tidsgräns', liq_drop: 'Likviditet föll', dev_sell: 'Dev sålde', security: 'Säkerhetsändring', manual: 'Manuell', kill: 'Kill-switch', copy_sell: 'Följde wallet-sälj', no_price: 'Prisdata saknas'};
 function exitClass(kind, reason) {
   const k = String(kind || '').toLowerCase();
   if (/^tp\d?$|take/.test(k)) return 'tp';
@@ -624,7 +678,7 @@ function renderHero() {
   if (P.eq != null && P.start) {
     const d = P.eq - P.start, p = d / P.start * 100, x = P.eq / P.start;
     setHTML($('#eqchg'), `<span class="chip ${cls(d)}">${d >= 0 ? '▲' : '▼'} ${sgn(d)}</span><span class="chip ${cls(d)}">${pct(p, 2)}</span><span class="chip dim">${nf(x, Math.abs(x - 1) < 0.1 ? 3 : 2)}x</span><span class="dim" style="font-size:12.5px;font-weight:600">sedan start ${usd(P.start)}</span>`);
-    document.title = `${usd(P.eq)} ${d >= 0 ? '▲' : '▼'} GROK TRADER`;
+    document.title = `${usd(P.eq)} ${d >= 0 ? '▲' : '▼'} ${MODE === 'sniper' ? 'GROK SNIPER' : 'GROK TRADER'}`;
   } else if (P.eq != null) setHTML($('#eqchg'), '');
   if (P.cash == null) { $('#k-cash').textContent = '–'; $('#k-pos').textContent = '–'; } else { roll($('#k-cash'), usd(P.cash)); roll($('#k-pos'), usd(P.value)); }
   $('#k-cash-s').textContent = P.eq ? nf(P.cash / P.eq * 100, 0) + '% av portföljen' : '';
@@ -686,22 +740,24 @@ function posCard(p, compact) {
   const mk = (v, c, l) => v == null ? '' : `<div class="mk ${c}" style="left:${pos(v)}%"><small>${l}</small></div>`;
   const upn = +p.unrealized_pct, fl = flashPos[p.id] ? 'flash-' + flashPos[p.id] : ''; delete flashPos[p.id];
   const d = decOf(p), sc = d ? d.total_score : null;
-  return `<div class="row clk ${fl}" data-mint="${esc(p.mint)}" data-pid="${p.id}"><div class="rh">${avatar(p.symbol)}<div class="rhm"><div class="rt"><span class="nm">$${esc(p.symbol)}</span>${sbadge(sc)}</div><div class="sub">${tdm(p.opened_at)} · ${agoSpan(p.opened_at)}${p.venue ? ' · ' + esc(VENUE[p.venue] || p.venue) : ''}</div></div>
+  return `<div class="row clk ${fl}" data-mint="${esc(p.mint)}" data-pid="${p.id}"><div class="rh">${avatar(p.symbol)}<div class="rhm"><div class="rt"><span class="nm">$${esc(p.symbol)}</span>${sbadge(sc)}</div><div class="sub">${tdm(p.opened_at)} · ${agoSpan(p.opened_at)}${p.venue ? ' · ' + esc(VENUE[p.venue] || p.venue) : ''}${MODE === 'sniper' ? stratTag(p) : ''}</div></div>
     <div class="rhr"><div class="val mono">${usd(+p.value_usd)}</div>${pcpill(upn, `${pct(upn, 2)} · ${sgn(+p.unrealized_usd, 3)}`)}</div></div>
     <div class="lvl"><div class="rail"></div>${mk(sl, 'sl', 'SL')}${tps.map((t, i) => mk(t, 'tp', 'TP' + (i + 1))).join('')}${mk(en, 'en', 'IN')}${mk(lp, 'now', '')}</div>
     ${compact ? '' : `<div class="kv">${kvi('Inköp', px(en))}${kvi('Nu', `<b>${px(lp)}</b>`)}${kvi('Investerat', usd(+p.invested_usd))}
       ${kvi('Stop-loss', sl != null ? `<span class="down">${px(sl)}</span> <span class="dim">${pct((sl / en - 1) * 100, 1)}</span>` : '<span class="dim">saknas</span>')}${kvi('Take-profit', tps.length ? `<span class="up">${(p.take_profits || []).map(t => (t.hit ? '✓' : '') + px(t.price)).join(' · ')}</span>` : '<span class="dim">saknas</span>')}${kvi('Källa', p.source ? esc(String(p.source).replace(/^telegram:/, '✈ ')) : '–')}</div>
     <div class="flags" style="margin-top:10px">${exitSummary(p)}</div>`}</div>`;
 }
+const emptyPos = () => MODE === 'sniper' ? '<div class="empty"><b>Inga öppna positioner</b>Sniper-boten väntar på en ny lansering / ett signal som klarar säkerhetskontrollerna och riskmotorn.</div>' : EMPTY_POS;
+const stratTag = p => p && p.strategy ? ` <span class="tag ${p.strategy === 'copy' ? 'cy2' : p.strategy === 'launch' ? 'buy' : 'cy'}">${esc(String(p.strategy).toUpperCase())}</span>` : '';
 const EMPTY_POS = '<div class="empty"><b>Inga öppna positioner</b>Boten väntar på en kandidat som klarar alla kontroller (poäng ≥ 75, inget säkerhetsveto).</div>';
 function renderHomePos() {
   const ops = openPos(); $('#pos-cnt').textContent = ops.length ? `(${ops.length})` : '';
-  setHTML($('#home-pos'), ops.length ? ops.slice(0, 3).map(p => posCard(p, true)).join('') : EMPTY_POS);
+  setHTML($('#home-pos'), ops.length ? ops.slice(0, 3).map(p => posCard(p, true)).join('') : emptyPos());
   const bd = $('#bd-pos'); bd.style.display = ops.length ? 'flex' : 'none'; bd.textContent = ops.length;
 }
 let posSeg = 'open';
 function renderPositions() {
-  const ops = openPos(); setHTML($('#positions'), ops.length ? ops.map(p => posCard(p, false)).join('') : EMPTY_POS);
+  const ops = openPos(); setHTML($('#positions'), ops.length ? ops.map(p => posCard(p, false)).join('') : emptyPos());
   const cl = arr('positions').filter(p => p.status !== 'open').sort((a, b) => new Date(b.closed_at || 0) - new Date(a.closed_at || 0));
   const trs = arr('trades').sort((a, b) => b.id - a.id);
   $('#n-open').textContent = ops.length ? ' ' + ops.length : ''; $('#n-closed').textContent = cl.length ? ' ' + cl.length : ''; $('#n-tx').textContent = trs.length ? ' ' + trs.length : '';
@@ -882,6 +938,7 @@ function renderVetoes() {
 
 /* ---------- more: scanner funnel, alerts, system ---------- */
 function renderFunnel() {
+  if (MODE === 'sniper') return renderSnFunnel();
   const f = kvv('funnel'); if (!S.kv.has('funnel')) { setHTML($('#funnel'), '<div class="dim" style="text-align:center;padding:14px">Väntar på scanner-data…</div>'); return; }
   const max = Math.max(f.seen || 1, 1), st = (n, v, c) => `<div class="st"><span class="nm2">${n}</span><span class="bw"><i style="width:${Math.max(2, (v || 0) / max * 100)}%;${c ? 'background:' + c : ''}"></i></span><span class="n mono">${nf(v || 0, 0)}</span></div>`;
   setHTML($('#funnel'), `<div class="rt" style="margin-bottom:10px;gap:12px"><span class="mono" style="font-size:38px;font-weight:800">${nf(f.analyzed, 0)}</span><span class="dim">mynt analyserade av 5 agenter + Grok<br>${nf(f.decisions_1h, 0)} beslut senaste timmen</span></div>` +
@@ -987,7 +1044,7 @@ function renderMirrorOther() {
 function renderRisk() {
   const st = mir('pub_risk_state')[0], ev = mir('pub_risk_events').sort((a, b) => new Date(b.ts || b._ts || 0) - new Date(a.ts || a._ts || 0)).slice(0, 10);
   const k = (l, v, c = '', s = '') => `<div class="tile"><div class="l">${l}</div><div class="v mono ${c}" style="font-size:17px">${v}</div>${s ? `<div class="s">${s}</div>` : ''}</div>`;
-  setHTML($('#risk-kpi'), st ? k('Öppna', `${st.open_positions ?? 0} / ${st.max_open ?? '–'}`, +st.open_positions >= +st.max_open ? 'down' : '') +
+  setHTML($('#risk-kpi'), MODE === 'sniper' ? snRiskKpi() : st ? k('Öppna', `${st.open_positions ?? 0} / ${st.max_open ?? '–'}`, +st.open_positions >= +st.max_open ? 'down' : '') +
     k('Max / position', st.max_position_pct != null ? nf(+st.max_position_pct * 100, 0) + '%' : '–', '', 'av kapital') +
     k('Exponering', `${usd(+st.exposure_usd)}`, '', nf(+st.exposure_pct, 0) + '% av portföljen') + k('Ledigt att investera', usd(+st.exposure_room_usd)) +
     k('Dagens PnL', sgn(+st.daily_pnl_usd), cls(+st.daily_pnl_usd), `gräns −${nf(+st.daily_limit_usd, 2)}`) +
@@ -1001,6 +1058,82 @@ function renderRisk() {
   setHTML($('#risk-exits'), names.length ? `<table class="alt"><tr><th>Utgångsorsak</th><th>Antal</th><th>Vinstandel</th><th>Summa PnL</th><th>Snitt %</th><th>Snitt hålltid</th></tr>${names.map(n => { const g = by[n];
     return `<tr><td>${esc(EXIT_LBL[n] || n)}</td><td class="mono">${g.n}</td><td class="mono">${nf(g.w / g.n * 100, 0)}%</td><td class="mono ${cls(g.pnl)}">${sgn(g.pnl)}</td><td class="mono ${cls(g.pct / g.n)}">${g.pct ? pct(g.pct / g.n, 1) : '–'}</td><td class="mono">${g.nh ? nf(g.hold / g.nh, 0) + ' min' : '–'}</td></tr>`; }).join('')}</table>` : '<div class="dim" style="text-align:center;padding:10px">Ingen data än – inga stängda positioner.</div>');
   setHTML($('#risk-events'), ev.length ? `<div class="sh"><h2>Senaste riskhändelser</h2><span class="cnt">blockerade köp, pauser</span></div><div class="list">` + ev.map(e => `<div class="row"><div class="rt"><span class="tag warn">${esc(e.kind || '')}</span>${e.symbol ? `<span class="nm" style="font-size:14px">$${esc(e.symbol)}</span>` : ''}<span class="spacer"></span><span class="dim mono" style="font-size:12px">${tdm(e.ts || e._ts)}</span></div><div class="why" style="color:#fff">${esc(e.detail || '')}</div></div>`).join('') + '</div>' : '');
+}
+
+
+/* ======================================================================
+   SNIPER BOT views (data: sniper_* tables; all numbers come from the bot's rows, nothing invented)
+   ====================================================================== */
+let sdSeg = 'all';
+const STRAT_N = {launch: 'Launch-snipe', momentum: 'Momentum', copy: 'Copy-trading'};
+const tile = (l, v, c = '', s = '') => `<div class="tile"><div class="l">${l}</div><div class="v mono ${c}" style="font-size:17px">${v}</div>${s ? `<div class="s">${s}</div>` : ''}</div>`;
+function renderSnStrat() {
+  const all = arr('positions'), rk = kvv('risk'), caps = rk.caps || {};
+  const t = ['launch', 'momentum', 'copy'].map(s => {
+    const ps = all.filter(p => p.strategy === s), op = ps.filter(p => p.status === 'open'), cl = ps.filter(p => p.status === 'closed');
+    const pnl = ps.reduce((a, p) => a + (p.status === 'closed' ? +p.close_pnl_usd || 0 : (+p.realized_pnl_usd || 0) + (+p.unrealized_usd || 0)), 0), w = cl.filter(p => +p.close_pnl_usd > 0).length;
+    return tile(STRAT_N[s], sgn(pnl), cls(pnl), `${op.length}${caps[s] ? ' / ' + caps[s] : ''} öppna · ${w}/${cl.length} vinster`);
+  }).join('');
+  const f = kvv('funnel');
+  setHTML($('#sn-strat'), t + tile('Lanseringar sedda', f.launches_seen != null ? nf(f.launches_seen, 0) : '–', '', f.launch_vetoed != null ? `${nf(f.launch_vetoed, 0)} stoppade av säkerhetskontroll` : ''));
+}
+function renderSnCopyKpi() {
+  const ws = arr('copy_wallets'), ct = arr('copy_trades'), c = kvv('copy'), fol = ws.filter(w => w.status === 'following');
+  const n = a => ct.filter(x => x.action === a).length, pnl = ws.reduce((a, w) => a + (+w.copied_pnl_usd || 0), 0);
+  setHTML($('#sn-copy-kpi'), tile('Följda wallets', fol.length, '', `${ws.filter(w => w.status === 'candidate').length} kandidater · ${ws.filter(w => w.status === 'rejected').length} avvisade`) +
+    tile('Realtidsström', c.ws_ok ? '<span class="up">ansluten</span>' : '<span class="am">ej ansluten</span>', '', c.last_event_age_s != null ? `senaste händelse ${nf(c.last_event_age_s, 0)} s sedan` : 'Helius logsSubscribe') +
+    tile('Kopierade köp', nf(n('copied'), 0), 'up', `${nf(n('skipped'), 0)} skippade · ${nf(n('mirrored_sell'), 0)} följda sälj`) + tile('Kopierad PnL', sgn(pnl), cls(pnl), 'stängda kopior'));
+}
+const WST = {following: ['FÖLJS', 'buy'], candidate: ['KANDIDAT', 'cy'], rejected: ['AVVISAD', 'stop']};
+function walletRow(w) {
+  const x = w.extra || {}, st = WST[w.status] || [w.status, ''], wr = w.win_rate != null ? +w.win_rate * 100 : null;
+  return `<div class="row"><div class="rh">${avatar(w.label || w.wallet)}<div class="rhm"><div class="rt"><span class="nm mono" style="font-size:14px">${esc(w.label || short(w.wallet))}</span><span class="tag ${st[1]}">${st[0]}</span></div><div class="sub">${esc(x.reason || w.source || '')}</div></div>
+    <div class="rhr"><div class="val mono ${wr == null ? 'dim' : wr >= 55 ? 'up' : 'down'}">${wr == null ? '–' : nf(wr, 0) + '%'}</div>${pcpill(+w.est_pnl_usd, sgn(+w.est_pnl_usd, 0))}</div></div>
+    <div class="kv">${kvi('Vinster / förluster', `${w.wins ?? 0} / ${w.losses ?? 0}`)}${kvi('Snitt-multipel', w.avg_multiple != null ? nf(+w.avg_multiple, 2) + 'x' : '–')}${kvi('Bästa affär', w.best_multiple != null ? nf(+w.best_multiple, 2) + 'x' : '–')}${kvi('Poäng', nf(+w.score, 0))}
+    ${kvi('Tidiga köp i vinnare', x.hits ?? '–')}${kvi('Våra kopior', w.copied_trades ?? 0)}${kvi('Kopierad PnL', sgn(+w.copied_pnl_usd))}${kvi('Wallet', `<a href="https://solscan.io/account/${esc(w.wallet)}" target="_blank" rel="noopener" class="cy">${esc(short(w.wallet))}</a>`)}</div></div>`;
+}
+function renderSnWallets() {
+  const ws = arr('copy_wallets').sort((a, b) => +b.score - +a.score), fol = ws.filter(w => w.status === 'following'), cand = ws.filter(w => w.status === 'candidate'), rej = ws.filter(w => w.status === 'rejected');
+  $('#sn-w-cnt').textContent = ws.length ? `(${fol.length} följs)` : '';
+  let h = fol.map(walletRow).join('') + cand.map(walletRow).join('');
+  if (rej.length) h += `<details class="sdw"><summary>Avvisade wallets (${rej.length}) – varför de inte följs</summary>${rej.slice(0, 25).map(walletRow).join('')}</details>`;
+  setHTML($('#sn-wallets'), h || NODATA('Inga wallets än', 'Gruvan analyserar tidiga köpare i pump.fun-mynt som verkligen gick långt, och mäter deras vinstandel på riktiga transaktioner. Första listan kommer efter några minuter.'));
+}
+const CTA = {copied: ['KOPIERAD', 'buy'], mirrored_sell: ['FÖLJDE SÄLJ', 'sell'], skipped: ['SKIPPAD', 'warn'], ignored: ['IGNORERAD', '']};
+function renderSnCtrades() {
+  const ct = arr('copy_trades').sort((a, b) => b.id - a.id); $('#sn-ct-cnt').textContent = ct.length ? `(${ct.length})` : '';
+  setHTML($('#sn-ctrades'), ct.length ? ct.slice(0, 40).map(c => {
+    const p = S.positions.get(c.position_id), sym = p ? p.symbol : short(c.mint), a = CTA[c.action] || [c.action, ''];
+    return `<div class="row ${c.mint ? 'clk' : ''}" ${c.mint ? `data-mint="${esc(c.mint)}"` : ''}><div class="rt"><span class="tag ${a[1]}">${a[0]}</span><span class="tag">${c.side === 'buy' ? 'KÖP' : 'SÄLJ'}</span><span class="nm">$${esc(sym)}</span><span class="spacer"></span>${c.pnl_usd != null ? `<b class="mono ${cls(+c.pnl_usd)}">${sgn(+c.pnl_usd)}</b>` : (c.our_usd != null ? `<b class="mono">${usd(+c.our_usd)}</b>` : '')}</div>
+      <div class="sub">${tdm(c.ts)} · ${agoSpan(c.ts)} · wallet ${esc(short(c.wallet))} · ${nf(+c.wallet_sol, 2)} SOL (${usd(+c.wallet_usd, 0)})${c.latency_s != null ? ' · signal ' + nf(+c.latency_s, 0) + ' s gammal' : ''}</div><div class="why">${esc(c.reason || '')}</div></div>`;
+  }).join('') : NODATA('Inga kopierade affärer än', 'När en följd wallet köper eller säljer dyker det upp här – även de vi skippar, med orsak.'));
+}
+function renderSnDecs() {
+  $$('#seg-sd button').forEach(b => b.classList.toggle('on', b.dataset.sd === sdSeg));
+  let ds = arr('decisions').sort((a, b) => b.id - a.id); if (sdSeg === 'BUY') ds = ds.filter(d => d.action === 'BUY'); else if (sdSeg === 'SKIP') ds = ds.filter(d => d.action !== 'BUY');
+  setHTML($('#sn-decs'), ds.length ? ds.slice(0, 40).map(d => {
+    const items = ((d.checks || {}).items || []), flags = ((d.checks || {}).flags || []), why = (d.veto_reasons && d.veto_reasons[0]) || (d.reasons && d.reasons[0]) || '';
+    return `<div class="row clk" data-mint="${esc(d.mint)}"><div class="rt"><span class="tag ${d.action === 'BUY' ? 'buy' : d.vetoed ? 'stop' : ''}">${d.action === 'BUY' ? 'KÖP' : d.vetoed ? 'VETO' : 'SKIP'}</span><span class="nm">$${esc(d.symbol)}</span><span class="tag ${d.strategy === 'copy' ? 'cy2' : 'cy'}">${esc(String(d.strategy || '').toUpperCase())}</span><span class="spacer"></span>${d.total_score != null ? sbadge(+d.total_score) : ''}<span class="dim" style="font-size:12px">${tm(d.ts)}</span></div>
+      <div class="sub">${srcChip(d.source)}</div><div class="why">${esc(String(why).slice(0, 220))}</div>
+      ${items.length ? `<details class="sdw"><summary>Säkerhetskontroller (${items.filter(i => i.ok === true).length}/${items.length} OK)</summary><div class="ck">${items.map(i => `<div><b class="${i.ok === true ? 'ok' : i.ok === false ? 'no' : 'dim'}">${i.ok === true ? '✓' : i.ok === false ? '✕' : '·'}</b> ${esc(String(i.name).replace(/_/g, ' '))}${i.note ? ' – ' + esc(String(i.note).slice(0, 140)) : ''}</div>`).join('')}${flags.length ? `<div class="am">Flaggor: ${flags.map(esc).join('; ')}</div>` : ''}</div></details>` : ''}</div>`;
+  }).join('') : NODATA('Inga beslut än', 'Varje lansering och varje kandidat får ett beslut med orsak – köp, skip eller säkerhetsveto.'));
+}
+function snRiskKpi() {
+  if (!S.kv.has('risk')) return `<div style="grid-column:1/-1">${NODATA('Ingen data än', 'Väntar på riskdata från sniper-boten…')}</div>`;
+  const r = kvv('risk'), by = r.by_strategy || {}, caps = r.caps || {}, paused = +r.daily_paused, cd = r.cooldown_until && new Date(r.cooldown_until) > new Date();
+  return tile('Öppna', `${r.open_positions ?? 0} / ${r.max_open ?? '–'}`, +r.open_positions >= +r.max_open ? 'down' : '', ['launch', 'momentum', 'copy'].map(s => `${s} ${by[s] || 0}/${caps[s] ?? '–'}`).join(' · ')) +
+    tile('Max / position', r.max_position_pct != null ? nf(+r.max_position_pct * 100, 1) + '%' : '–', '', 'av kapital') + tile('Exponering', usd(+r.exposure_usd), '', `${nf(+r.exposure_pct, 0)}% av portföljen · tak ${nf(+r.max_exposure_pct, 0)}%`) +
+    tile('Ledigt att investera', usd(+r.exposure_room_usd), '', `kassareserv ${nf(+r.cash_reserve_pct, 0)}%`) + tile('Dagens PnL', sgn(+r.daily_pnl_usd), cls(+r.daily_pnl_usd), `gräns −${nf(+r.daily_limit_usd, 2)}`) +
+    tile('Köp', paused ? 'PAUSADE' : cd ? 'paus' : 'tillåtna', paused || cd ? 'down' : 'up', paused ? 'daglig förlustgräns nådd' : cd ? esc(r.pause_why || '') : 'riskmotorn tillåter nya köp') + tile('Förlustserie', `${r.loss_streak ?? 0}`, +r.loss_streak >= 4 ? 'down' : '', 'förluster i rad');
+}
+function renderSnFunnel() {
+  const f = kvv('funnel'); if (!S.kv.has('funnel')) { setHTML($('#funnel'), '<div class="dim" style="text-align:center;padding:14px">Väntar på data från sniper-boten…</div>'); return; }
+  const hb = kvv('heartbeat'), max = Math.max(f.launches_seen || 1, f.decisions || 1, 1), st = (n, v, c) => `<div class="st"><span class="nm2">${n}</span><span class="bw"><i style="width:${Math.max(2, (v || 0) / max * 100)}%;${c ? 'background:' + c : ''}"></i></span><span class="n mono">${nf(v || 0, 0)}</span></div>`;
+  setHTML($('#funnel'), `<div class="rt" style="margin-bottom:10px;gap:12px"><span class="mono" style="font-size:38px;font-weight:800">${nf(f.launches_seen, 0)}</span><span class="dim">nya pump.fun-lanseringar mottagna<br>PumpPortal-ström ${hb.ws_connected ? '<b class="up">ansluten</b>' : '<b class="am">ej ansluten</b>'}${hb.last_ws_msg_age_s != null ? ` · senaste meddelande ${nf(hb.last_ws_msg_age_s, 0)} s sedan` : ''}</span></div>` +
+    st('Lanseringar sedda', f.launches_seen) + st('Stoppade av säkerhetskontroll', f.launch_vetoed, '#ff4d62') + st('Köpta (launch-snipe)', f.launch_bought, '#00f27a') + st('Momentum-kandidater utvärderade', f.momentum_evaluated, '#5ad1ff') + st('Momentum köpta', f.momentum_bought, '#00f27a') +
+    st('Beslut totalt', f.decisions) + st('Köpbeslut', f.buys, '#00f27a') + st('Skips / veton', f.skips, '#ff4d62') +
+    `<div class="mh">Källor (senaste cykel)</div>${Object.entries(f.sources || {}).map(([k, v]) => `<span class="tag cy" style="margin:2px">${esc(k)} ${nf(v, 0)}</span>`).join('') || '<span class="dim">–</span>'}` +
+    `<div class="mh">Vanligaste skälen att inte köpa</div>${(f.top_rejections || []).map(([k, v]) => `<span class="tag warn" style="margin:2px">${esc(k)} ${nf(v, 0)}</span>`).join('') || '<span class="dim">–</span>'}`);
 }
 
 /* ======================================================================
@@ -1064,7 +1197,7 @@ async function openCoin(mint) {
   const sh = $('#sheet'); sh.classList.add('open'); sh.setAttribute('aria-hidden', 'false'); sh.scrollTop = 0; document.body.style.overflow = 'hidden';
   if (!sheetOpen) { sheetOpen = true; try { history.pushState({gt: 'sheet'}, ''); } catch (e) {} if (tg && tg.BackButton) { try { tg.BackButton.show(); tg.BackButton.onClick(closeCoin); } catch (e) {} } }
   renderSheet();
-  let data = null; try { const r = await sb.from('price_ticks').select('ts,price').eq('mint', mint).order('ts', {ascending: false}).limit(600); data = r.data; } catch (e) {}
+  let data = null; try { const r = await sb.from(dbT('price_ticks')).select('ts,price').eq('mint', mint).order('ts', {ascending: false}).limit(600); data = r.data; } catch (e) {}
   if (SH.mint !== mint) return;
   SH.ticks = (data || []).reverse(); SH.ticksDone = true;
   if (!SH.user) { if (SH.ticks.length >= 8) SH.mode = 'line'; else { SH.mode = 'candle'; loadCandles(); } }
@@ -1196,21 +1329,26 @@ function renderSheet() {
    Navigation, render registry
    ====================================================================== */
 let curTab = 'home', moreSeg = 'risk';
-const R = {engine: [() => { renderEngine(); setConn(); }, '*'], hero: [renderHero, '*'], ticker: [renderTicker, '*'], stats: [renderStats, 'home'], homepos: [renderHomePos, '*'], mini: [renderMiniAgents, 'home'], homefeed: [renderHomeFeed, 'home'],
+const TONLY = new Set(['mini', 'agents', 'decisions', 'debates', 'vetoes', 'smart', 'hype', 'tg', 'mirror']), SONLY = new Set(['snstrat', 'sncopykpi', 'snwallets', 'snctrades', 'sndecs']);
+const modeOk = x => MODE === 'sniper' ? !TONLY.has(x) : !SONLY.has(x);
+const R = {snstrat: [() => renderSnStrat(), 'home'], sncopykpi: [() => renderSnCopyKpi(), 'agents'], snwallets: [() => renderSnWallets(), 'agents'], snctrades: [() => renderSnCtrades(), 'agents'], sndecs: [() => renderSnDecs(), 'agents'],
+  engine: [() => { renderEngine(); setConn(); }, '*'], hero: [renderHero, '*'], ticker: [renderTicker, '*'], stats: [renderStats, 'home'], homepos: [renderHomePos, '*'], mini: [renderMiniAgents, 'home'], homefeed: [renderHomeFeed, 'home'],
   positions: [renderPositions, 'pos'], feed: [renderFeed, 'feed'], agents: [renderAgents, 'agents'], decisions: [renderDecisions, 'agents'], debates: [renderDebates, 'agents'], vetoes: [renderVetoes, 'agents'],
   risk: [renderRisk, 'more'], funnel: [renderFunnel, 'more'], smart: [renderSmart, 'more'], hype: [renderHype, 'more'], tg: [renderTg, 'more'], alerts: [renderAlerts, 'more'], mirror: [renderMirrorOther, 'more'], sys: [renderSys, 'more']};
 const MAP = {
   all: Object.keys(R), events: ['feed', 'homefeed', 'ticker'], decisions: ['decisions', 'vetoes', 'feed', 'homefeed', 'agents', 'mini', 'homepos', 'positions', 'funnel'], agent_reports: ['agents', 'mini', 'feed', 'hype', 'decisions', 'smart'], conflicts: ['debates', 'feed', 'homefeed'],
   trades: ['positions', 'feed', 'homefeed', 'homepos', 'stats'], route_comparisons: ['positions'], positions: ['homepos', 'hero', 'stats', 'positions', 'risk', 'ticker', 'mini'], equity_snapshots: ['hero'], agent_status: ['agents', 'mini'],
   alerts: ['alerts', 'feed', 'homefeed'], problems: ['alerts'], kv: ['engine', 'hero', 'stats', 'funnel', 'agents', 'mini', 'sys'], mirror: ['tg', 'mirror', 'hype', 'risk', 'smart', 'agents', 'mini', 'feed', 'homefeed', 'ticker'], opt: ['smart', 'agents']};
+MAP.decisions.push('sndecs', 'snstrat'); MAP.trades.push('snstrat'); MAP.positions.push('snstrat', 'sncopykpi'); MAP.kv.push('risk', 'sncopykpi', 'snstrat');
+MAP.copy_wallets = ['snwallets', 'sncopykpi']; MAP.copy_trades = ['snctrades', 'sncopykpi', 'snwallets'];
 function render(keys) {
   if (!ready) return; const todo = new Set(); keys.forEach(k => (MAP[k] || []).forEach(x => todo.add(x)));
-  todo.forEach(x => { const [fn, tab] = R[x]; if (tab !== '*' && tab !== curTab) return; try { fn(); } catch (e) { console.error('render', x, e); } });
+  todo.forEach(x => { const [fn, tab] = R[x]; if (!modeOk(x)) return; if (tab !== '*' && tab !== curTab) return; try { fn(); } catch (e) { console.error('render', x, e); } });
   if (SH.mint && keys.some(k => ['all', 'trades', 'positions', 'decisions', 'agent_reports', 'conflicts', 'route_comparisons'].includes(k))) try { renderSheet(); } catch (e) { console.error('sheet', e); }
 }
 function setTab(t) {
   curTab = t; document.body.dataset.tab = t; $$('#tabbar button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-  if (ready) Object.keys(R).forEach(x => { if (R[x][1] === t) try { R[x][0](); } catch (e) { console.error('render', x, e); } });
+  if (ready) Object.keys(R).forEach(x => { if (R[x][1] === t && modeOk(x)) try { R[x][0](); } catch (e) { console.error('render', x, e); } });
   window.scrollTo({top: 0});
 }
 function setMore(s) { moreSeg = s; $$('#seg-more button').forEach(b => b.classList.toggle('on', b.dataset.s === s)); $$('.mpane').forEach(p => p.style.display = p.dataset.m === s ? '' : 'none'); }
@@ -1218,6 +1356,8 @@ document.addEventListener('click', e => {
   const T = e.target;
   const rb = T.closest('#rng button'); if (rb) { rangeH = +rb.dataset.r; $$('#rng button').forEach(b => b.classList.toggle('on', b === rb)); renderHero(); return; }
   const ab = T.closest('[data-al]'); if (ab) { alTab = ab.dataset.al; renderAlerts(); return; }
+  const mb = T.closest('#modebar button'); if (mb) { switchMode(mb.dataset.mode); return; }
+  const sdb = T.closest('#seg-sd button'); if (sdb) { sdSeg = sdb.dataset.sd; renderSnDecs(); return; }
   const tb = T.closest('#tabbar button'); if (tb) { setTab(tb.dataset.t); return; }
   const go = T.closest('[data-go]'); if (go) { setTab(go.dataset.go); return; }
   const sp = T.closest('#seg-pos button'); if (sp) { posSeg = sp.dataset.s; renderPositions(); return; }
@@ -1229,7 +1369,7 @@ document.addEventListener('click', e => {
   const row = T.closest('[data-mint]'); if (row && row.dataset.mint && !T.closest('a,details,summary,button')) openCoin(row.dataset.mint);
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCoin(); });
-function boot2() { setMore('risk'); }
+function boot2() { setMore('risk'); applyModeUI(); }
 
 /* ---------------- clocks ---------------- */
 setInterval(() => { $('#clock').textContent = fT.format(new Date()); $$('.ago').forEach(el => { el.textContent = ago(el.dataset.ts); }); if (ready) renderEngine(); }, 1000);
